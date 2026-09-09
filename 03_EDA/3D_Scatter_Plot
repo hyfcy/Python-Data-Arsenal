@@ -1,0 +1,81 @@
+"""
+3D 散点图可视化标准模板 (含第四维颜色映射)
+--------------------------------------------------
+适用场景：探索高维数据空间分布、观察三个主特征与第四个连续特征（颜色）的关系
+主要特性：
+1. 提取了全局配置项，实现代码与数据的解耦
+2. 包含防拥挤的智能随机抽样功能
+3. 内置中文字体支持防乱码配置
+"""
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# ==========================================
+# 第一部分：全局中文与显示配置
+# ==========================================
+# 规定中文字体，防止图表中的中文标签出现方块乱码
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']  # Windows默认雅黑，Mac用户可改为 'Arial Unicode MS'
+plt.rcParams['axes.unicode_minus'] = False             # 确保坐标轴的负号正常显示
+
+# ==========================================
+# 第二部分：定义绘图参数 (TODO: 根据实际数据修改)
+# ==========================================
+# 假设 df 已经在上文通过 pd.read_csv() 等方式加载完毕
+
+# 1. 字段映射配置
+X_COL = 'feature_x'       # X轴对应的列名
+Y_COL = 'feature_y'       # Y轴对应的列名
+Z_COL = 'feature_z'       # Z轴对应的列名
+COLOR_COL = 'target_val'  # 用于颜色深浅映射的列名 (表示第四个维度的信息)
+
+# 2. 文本标签配置
+PLOT_TITLE = '三维空间特征分布散点图'
+X_LABEL = 'X 轴特征名称'
+Y_LABEL = 'Y 轴特征名称'
+Z_LABEL = 'Z 轴特征名称'
+COLORBAR_LABEL = '颜色映射特征名称'
+
+# 3. 视觉与性能配置
+SAMPLE_SIZE = 2000        # 抽样数量：防止3D点过多导致渲染卡顿或视觉粘连。若需全量展示可设为 None
+POINT_SIZE = 15           # 散点的大小
+POINT_ALPHA = 0.6         # 散点的透明度 (0~1)，有助于观察重叠密度
+COLOR_MAP = 'viridis'     # 颜色映射主题，其他经典可选：'coolwarm', 'plasma', 'magma'
+
+# ==========================================
+# 第三部分：数据处理与图表渲染
+# ==========================================
+
+# 1. 智能抽样 (保证流速和视觉效果)
+if SAMPLE_SIZE and len(df) > SAMPLE_SIZE:
+    df_plot = df.sample(n=SAMPLE_SIZE, random_state=42)
+else:
+    df_plot = df.copy()
+
+# 2. 创建画布和 3D 坐标轴
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(projection='3d')
+
+# 3. 核心绘制：3D 散点图
+img = ax.scatter(
+    df_plot[X_COL], 
+    df_plot[Y_COL], 
+    df_plot[Z_COL], 
+    c=df_plot[COLOR_COL], 
+    cmap=COLOR_MAP, 
+    s=POINT_SIZE, 
+    alpha=POINT_ALPHA
+)
+
+# 4. 设置视觉标签
+ax.set_xlabel(X_LABEL)
+ax.set_ylabel(Y_LABEL)
+ax.set_zlabel(Z_LABEL)
+ax.set_title(PLOT_TITLE, fontsize=14)
+
+# 5. 添加颜色指示条
+fig.colorbar(img, label=COLORBAR_LABEL)
+
+# 6. 最终展示
+plt.show()
